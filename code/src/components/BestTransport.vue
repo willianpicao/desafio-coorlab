@@ -34,14 +34,14 @@
         <p>Tempo estimado: {{ this.tempoFreteMenortempo }}</p>
         <p>Preço: {{ this.custoTotalFreteMenorTempo }}</p>
       </div>
-      <button @click="clearResult">Limpar</button>
+      <button @click="limparResultado">Limpar</button>
     </div>
 
     <div class="modal" v-if="mostrarModal">
       <div class="modal-content">
         <h3>Preencha todos os campos</h3>
         <p>Por favor, preencha todos os campos antes de continuar.</p>
-        <button @click="closeModal">Fechar</button>
+        <button @click="fecharModal">Fechar</button>
       </div>
     </div>
   </div>
@@ -49,7 +49,7 @@
   <div class="modal-content">
     <h3>Preencha todos os campos</h3>
     <p>Por favor, preencha todos os campos antes de continuar.</p>
-    <button @click="closeModal">Fechar</button>
+    <button @click="fecharModal">Fechar</button>
   </div>
 </div>
 </div>
@@ -118,9 +118,8 @@ export default {
         return;
       }
       const { data } = await axios.get('http://localhost:3000/transport');
-      console.log(data)
+
       const objetosFiltrados = data.filter((item) => item.city === this.cidadeSelecionada);
-      console.log(objetosFiltrados);
 
       // Encontrar o objeto com menor lead_time
       const objetoMenorLeadTime = objetosFiltrados.reduce((minObjeto, objeto) => {
@@ -144,8 +143,6 @@ export default {
         return minObjeto; // Mantemos o objeto com menor lead_time e menor custo
       });
 
-      console.log(objetoMenorLeadTime); //objeto de menor tempo...
-
       const objetoMenorValor = objetosFiltrados.reduce((minObjeto, objeto) => {
         // Converte os valores do custo em números para facilitar a comparação
         const custoMinObjeto = this.pesoInformado <= 100 ? parseFloat(minObjeto.cost_transport_light.substr(3)) : parseFloat(minObjeto.cost_transport_heavy.substr(3));
@@ -155,13 +152,10 @@ export default {
         return custoObjeto < custoMinObjeto ? objeto : minObjeto;
       });
 
-      console.log(objetoMenorValor);
-
       let custoTotalObjMenorPreço=0
       let custoTotalObjMenorLead=0
       let weight= parseInt(this.pesoInformado)
 
-      console.log("peso:"+ weight);
       //Custos
       if( (weight > 0) && (weight <= 100) ){
         custoTotalObjMenorLead = (weight * parseFloat(objetoMenorLeadTime.cost_transport_light.substr(3))).toFixed(2)
@@ -170,13 +164,10 @@ export default {
         custoTotalObjMenorLead = (weight * parseFloat(objetoMenorLeadTime.cost_transport_heavy.substr(3))).toFixed(2)
         custoTotalObjMenorPreço = (weight * parseFloat(objetoMenorValor.cost_transport_heavy.substr(3))).toFixed(2)
       }
-      console.log("Custo total para menor valor: "+custoTotalObjMenorPreço);
-      console.log("Custo total para frete mais rápido: "+custoTotalObjMenorLead);
-
+      
       this.companiaMenorPreco= objetoMenorValor.name
       this.tempoFreteMenorPreco= objetoMenorValor.lead_time
       this.custoTotalFreteMenorPreco= custoTotalObjMenorPreço
-
 
       this.companiaMenorTempo= objetoMenorLeadTime.name
       this.tempoFreteMenortempo=objetoMenorLeadTime.lead_time
@@ -184,20 +175,16 @@ export default {
 
       this.mostrarResultado=true
     },
-    closeModal(){
+    fecharModal(){
       this.mostrarModal=false
     },
-    clearResult(){
+    limparResultado(){
       this.mostrarResultado=false
-      this.clearForm()
+      this.limparForm()
     },
-    clearForm() {
+    limparForm() {
       this.cidadeSelecionada = ''; // Limpa o valor do campo cidadeSelecionada
       this.pesoInformado = ''; // Limpa o valor do campo pesoInformado
-    },
-     inputClear(){
-      this.cidadeSelecionada = '';
-      this.pesoInformado = '';
     }
   }
 }
@@ -211,8 +198,6 @@ export default {
 .title .navbar-brand {
   margin-left: 20px;
 }
-
-
 
 .modal {
   position: fixed;
@@ -231,9 +216,9 @@ export default {
   padding: 20px;
   border-radius: 5px;
   text-align: center;
-  width: 50%; /* Largura do modal */
-  max-width: 500px; /* Largura máxima do modal */
-  margin: 0 25%; /* Espaço de 25% de padding em cada lado */
+  width: 50%;
+  max-width: 500px;
+  margin: 0 25%;
 }
 .main-container {
   position: absolute;

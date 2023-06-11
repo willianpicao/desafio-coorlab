@@ -10,24 +10,34 @@
     <div class="form-container">
       <form @submit.prevent="submitForm">
         <!-- botao para selecionar cidades -->
-        <select class="form-control" v-model="citySelected">
+        <select class="form-control" v-model="cidadeSelecionada">
           <option value="" disabled>Selecione o destino</option>
-          <option v-for="item in citys" :value="item" :key="item">{{ item }}</option>
+          <option v-for="item in cidades" :value="item" :key="item">{{ item }}</option>
         </select>
-        <!-- Input do weightSelected -->
-        <input v-model="weightSelected" placeholder="Informe o peso em kg" type="text" />
+        <!-- Input do pesoInformado -->
+        <input v-model="pesoInformado" placeholder="Informe o peso em kg" type="text" />
 
         <button type="submit">Selecionar</button>
       </form>
     </div>
 
-    <div class="result-container" v-if="showResult">
-      <div class="rectangle"></div>
-      <div class="rectangle"></div>
+    <div class="result-container" v-if="mostrarResultado">
+      <div class="rectangle">
+        <h1>Frete com menor valor</h1>
+        <p>Transportadora: {{ this.companiaMenorPreco }}</p>
+        <p>Tempo estimado: {{ this.tempoFreteMenorPreco }}</p>
+        <p>Preço: {{ this.custoTotalFreteMenorPreco }}</p>
+      </div>
+      <div class="rectangle">
+        <h1>Frete mais rápido</h1>
+        <p>Transportadora: {{ this.companiaMenorTempo }}</p>
+        <p>Tempo estimado: {{ this.tempoFreteMenortempo }}</p>
+        <p>Preço: {{ this.custoTotalFreteMenorTempo }}</p>
+      </div>
       <button @click="clearResult">Limpar</button>
     </div>
 
-    <div class="modal" v-if="showModal">
+    <div class="modal" v-if="mostrarModal">
       <div class="modal-content">
         <h3>Preencha todos os campos</h3>
         <p>Por favor, preencha todos os campos antes de continuar.</p>
@@ -35,7 +45,7 @@
       </div>
     </div>
   </div>
-  <div class="modal" v-if="showModal">
+  <div class="modal" v-if="mostrarModal">
   <div class="modal-content">
     <h3>Preencha todos os campos</h3>
     <p>Por favor, preencha todos os campos antes de continuar.</p>
@@ -62,35 +72,37 @@ export default {
   },
   data() {
     const appName = ''
-    const citys={}
-    const freteCity=[]
-    const lowestPrice=Infinity
-    const shorterTime=Infinity
-    const nameLesserPrice=''
-    const nameLesserTime=''
-    const showModal=false
-    const showResult=false
+    const cidades={}
+    const mostrarModal=false
+    const mostrarResultado=false
+    const companiaMenorPreco=''
+    const companiaMenorTempo=''
+    const tempoFreteMenorPreco=''
+    const tempoFreteMenortempo=''
+    const custoTotalFreteMenorPreco=0.0
+    const custoTotalFreteMenorTempo=0.0
     return {
-      showResult,
-      showModal,
-      nameLesserTime,
-      nameLesserPrice,
-      lowestPrice,
-      shorterTime,
-      freteCity,
+      companiaMenorPreco,
+      companiaMenorTempo,
+      tempoFreteMenorPreco,
+      tempoFreteMenortempo,
+      custoTotalFreteMenorPreco,
+      custoTotalFreteMenorTempo,
+      mostrarResultado,
+      mostrarModal,
       appName,
-      citys,
-      citySelected:'',
-      weightSelected:''
+      cidades,
+      cidadeSelecionada:'',
+      pesoInformado:''
     }
   },
   async created() {
     const { data } = await axios.get('http://localhost:3000/transport');
-    let citys = {};
+    let cidades = {};
     data.map((item) => {
-      citys[item.city] = 1;
+      cidades[item.city] = 1;
     })
-    this.citys = Object.keys(citys);
+    this.cidades = Object.keys(cidades);
 
     this.appName = 'Melhor Frete'
     
@@ -101,81 +113,91 @@ export default {
       console.log(this.appName)
     },
     async submitForm ( ){
-      if (!this.citySelected || !this.weightSelected) {
-        this.showModal = true; // Exibe a tela/modal caso algum campo não tenha sido preenchido
+      if (!this.cidadeSelecionada || !this.pesoInformado) {
+        this.mostrarModal = true; // Exibe a tela/modal caso algum campo não tenha sido preenchido
         return;
       }
-      // Pega os valores das variaveis do formulario 
-      // Sendo eles valores dos campos do SELECT da Cidade
-      // E o Peso do Frete
-      const city= this.citySelected
-      const weight= parseInt(this.weightSelected)
-
-      console.log("cidade:"+city)
-      console.log("tipo da varial weigth "+ typeof(weight));
-      
-      //Pega todos objetos da API
       const { data } = await axios.get('http://localhost:3000/transport');
-      let freteCity = [];
-      //Filtra os objetos da API baseado na escolha de cidade do Usuario
-      data.map((item) => {
-        if (item.city == city){
-          freteCity.push(item)
+      console.log(data)
+      const objetosFiltrados = data.filter((item) => item.city === this.cidadeSelecionada);
+      console.log(objetosFiltrados);
+
+      // Encontrar o objeto com menor lead_time
+      const objetoMenorLeadTime = objetosFiltrados.reduce((minObjeto, objeto) => {
+        const leadTimeMinObjeto = parseInt(minObjeto.lead_time);
+        const leadTimeObjeto = parseInt(objeto.lead_time);
+
+        if (leadTimeObjeto < leadTimeMinObjeto) {
+          return objeto; // O objeto atual tem um lead_time menor, então o escolhemos como o novo objeto com menor lead_time
+        } else if (leadTimeObjeto === leadTimeMinObjeto) {
+          // O lead_time é igual, vamos comparar o custo
+
+          // Extrair os custos dos objetos
+          const custoMinObjeto = parseInt(minObjeto.pesoInformado) <= 100 ? parseFloat(minObjeto.cost_transport_light.replace('R$', '').trim()) : parseFloat(minObjeto.cost_transport_heavy.replace('R$', '').trim());
+          const custoObjeto = parseInt(objeto.pesoInformado) <= 100 ? parseFloat(objeto.cost_transport_light.replace('R$', '').trim()) : parseFloat(objeto.cost_transport_heavy.replace('R$', '').trim());
+
+          if (custoObjeto < custoMinObjeto) {
+            return objeto; // O objeto atual tem um custo menor, então o escolhemos como o novo objeto com menor lead_time e menor custo
+          }
         }
-      })
-      this.freteCity = freteCity
-      console.log(freteCity);
 
-      //por peso verificando se > 100 ou <
-      if(weight > 100){
-        freteCity.forEach(objeto => {
-          const value = parseFloat(objeto.cost_transport_heavy.substring(3));
+        return minObjeto; // Mantemos o objeto com menor lead_time e menor custo
+      });
 
-          if (value < this.lowestPrice) {
-            this.lowestPrice = value;
-            this.nameLesserPrice = objeto.name;
-          }
-        });
+      console.log(objetoMenorLeadTime); //objeto de menor tempo...
 
-      }else if ( (weight > 0) && (weight <= 100) ){
-        freteCity.forEach(objeto => {
-          const value = parseFloat(objeto.cost_transport_light.substring(3));
+      const objetoMenorValor = objetosFiltrados.reduce((minObjeto, objeto) => {
+        // Converte os valores do custo em números para facilitar a comparação
+        const custoMinObjeto = this.pesoInformado <= 100 ? parseFloat(minObjeto.cost_transport_light.substr(3)) : parseFloat(minObjeto.cost_transport_heavy.substr(3));
+        const custoObjeto = this.pesoInformado <= 100 ? parseFloat(objeto.cost_transport_light.substr(3)) : parseFloat(objeto.cost_transport_heavy.substr(3));
 
-          if (value < this.lowestPrice) {
-            this.lowestPrice = value;
-            this.nameLesserPrice = objeto.name;
-          }
-        });
+        // Retorna o objeto com menor valor
+        return custoObjeto < custoMinObjeto ? objeto : minObjeto;
+      });
+
+      console.log(objetoMenorValor);
+
+      let custoTotalObjMenorPreço=0
+      let custoTotalObjMenorLead=0
+      let weight= parseInt(this.pesoInformado)
+
+      console.log("peso:"+ weight);
+      //Custos
+      if( (weight > 0) && (weight <= 100) ){
+        custoTotalObjMenorLead = (weight * parseFloat(objetoMenorLeadTime.cost_transport_light.substr(3))).toFixed(2)
+        custoTotalObjMenorPreço = (weight * parseFloat(objetoMenorValor.cost_transport_light.substr(3))).toFixed(2)
+      }else if ( weight > 100 ){
+        custoTotalObjMenorLead = (weight * parseFloat(objetoMenorLeadTime.cost_transport_heavy.substr(3))).toFixed(2)
+        custoTotalObjMenorPreço = (weight * parseFloat(objetoMenorValor.cost_transport_heavy.substr(3))).toFixed(2)
       }
+      console.log("Custo total para menor valor: "+custoTotalObjMenorPreço);
+      console.log("Custo total para frete mais rápido: "+custoTotalObjMenorLead);
 
-      //Menor tempo
-      freteCity.forEach(objeto => {
-          const time = parseInt(objeto.lead_time.slice(0, -1));
+      this.companiaMenorPreco= objetoMenorValor.name
+      this.tempoFreteMenorPreco= objetoMenorValor.lead_time
+      this.custoTotalFreteMenorPreco= custoTotalObjMenorPreço
 
-          if (time < this.shorterTime) {
-            this.shorterTime = time;
-            this.nameLesserTime = objeto.name;
-          }
-        });
 
-      //veriicar nome da compania com menor preço e preço
-      console.log("Menor preco= "+this.lowestPrice);
-      console.log("Nome tranportadora de menor preço= "+this.nameLesserPrice);
+      this.companiaMenorTempo= objetoMenorLeadTime.name
+      this.tempoFreteMenortempo=objetoMenorLeadTime.lead_time
+      this.custoTotalFreteMenorTempo=custoTotalObjMenorLead
 
-      console.log("menor tempo= "+ this.shorterTime);
-      console.log("nome compania menor tempo= "+ this.nameLesserTime);
-      this.showResult=true
+      this.mostrarResultado=true
     },
     closeModal(){
-      this.showModal=false
+      this.mostrarModal=false
     },
     clearResult(){
-      this.showResult=false
+      this.mostrarResultado=false
       this.clearForm()
     },
     clearForm() {
-      this.citySelected = ''; // Limpa o valor do campo citySelected
-      this.weightSelected = ''; // Limpa o valor do campo weightSelected
+      this.cidadeSelecionada = ''; // Limpa o valor do campo cidadeSelecionada
+      this.pesoInformado = ''; // Limpa o valor do campo pesoInformado
+    },
+     inputClear(){
+      this.cidadeSelecionada = '';
+      this.pesoInformado = '';
     }
   }
 }

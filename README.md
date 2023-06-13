@@ -1,7 +1,7 @@
 # Desafio CoorLab
 Olá DEV, pronto para participar do nosso processo seletivo?
 
-# Desafio feito é desafio entrege!
+# Desafio feito é desafio entregue!
 Realmente achei desafiante hehe. Devido ao meu afastamento das linguagens JavaScript, HTML e CSS por um longo período de tempo, precisei revisitar muitos conceitos. Além disso, o desafio também foi meu primeiro contato com Vue.js.
 
 No entanto, mesmo com os desafios enfrentados, achei a experiência muito interessante e enriquecedora. Através da prática, pude aprender e aprimorar minhas habilidades de forma significativa. Foi gratificante poder aplicar os conhecimentos teóricos que adquiri anteriormente em um contexto real.

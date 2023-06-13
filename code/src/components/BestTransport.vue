@@ -8,13 +8,17 @@
   </b-navbar>
   <div class="main-container">
     <div class="form-container">
+      <img src="../assets/logo.png">
+      <h1>Insira o destino e o peso</h1>
       <form @submit.prevent="submitForm">
         <!-- botao para selecionar cidades -->
+        <p>Destino</p>
         <select class="form-control" v-model="cidadeSelecionada">
           <option value="" disabled>Selecione o destino</option>
           <option v-for="item in cidades" :value="item" :key="item">{{ item }}</option>
         </select>
         <!-- Input do pesoInformado -->
+        <p>Peso</p>
         <input v-model="pesoInformado" placeholder="Informe o peso em kg" type="text" />
 
         <button type="submit">Selecionar</button>
@@ -22,19 +26,31 @@
     </div>
 
     <div class="result-container" v-if="mostrarResultado">
+      <p class="pFrase">Estas são as melhores alternativas de frete que encontramos para você</p>
       <div class="rectangle">
-        <h1>Frete com menor valor</h1>
-        <p>Transportadora: {{ this.companiaMenorPreco }}</p>
-        <p>Tempo estimado: {{ this.tempoFreteMenorPreco }}</p>
-        <p>Preço: {{ this.custoTotalFreteMenorPreco }}</p>
+
+        <div class="conteudoRect">
+          <p class="titulo">Frete com menor valor</p>
+          <p class="pInf">Transportadora: {{ this.companiaMenorPreco }}</p>
+          <p class="pInf">Tempo estimado: {{ this.tempoFreteMenorPreco }}</p>
+          <div class="preco-container">
+            <p class="preco">R$ {{ this.custoTotalFreteMenorPreco }}</p>
+          </div>
+        </div>
+        
       </div>
       <div class="rectangle">
-        <h1>Frete mais rápido</h1>
-        <p>Transportadora: {{ this.companiaMenorTempo }}</p>
-        <p>Tempo estimado: {{ this.tempoFreteMenortempo }}</p>
-        <p>Preço: {{ this.custoTotalFreteMenorTempo }}</p>
+        <div class="conteudoRect">
+          <p class="titulo">Frete mais rápido</p>
+          <p class="pInf">Transportadora: {{ this.companiaMenorTempo }}</p>
+          <p class="pInf">Tempo estimado: {{ this.tempoFreteMenortempo }}</p>
+          <div class="preco-container">
+            <p class="preco">R$ {{ this.custoTotalFreteMenorTempo }}</p>
+          </div>
+        </div>
+        
       </div>
-      <button @click="limparResultado">Limpar</button>
+      <button class="botaoLimpar" @click="limparResultado">Limpar</button>
     </div>
 
     <div class="modal" v-if="mostrarModal">
@@ -45,13 +61,15 @@
       </div>
     </div>
   </div>
-  <div class="modal" v-if="mostrarModal">
-  <div class="modal-content">
-    <h3>Preencha todos os campos</h3>
-    <p>Por favor, preencha todos os campos antes de continuar.</p>
-    <button @click="fecharModal">Fechar</button>
+
+  <div class="modal" v-if="mostrarModalInputValido">
+    <div class="modal-content">
+      <h3>Informe Valores Validos</h3>
+      <p>Por favor, preencha o campo de peso apenas com números.</p>
+      <button @click="fecharModalInputValido">Fechar</button>
+    </div>
   </div>
-</div>
+  
 </div>
 
 
@@ -74,6 +92,7 @@ export default {
     const appName = ''
     const cidades={}
     const mostrarModal=false
+    const mostrarModalInputValido=false
     const mostrarResultado=false
     const companiaMenorPreco=''
     const companiaMenorTempo=''
@@ -90,6 +109,7 @@ export default {
       custoTotalFreteMenorTempo,
       mostrarResultado,
       mostrarModal,
+      mostrarModalInputValido,
       appName,
       cidades,
       cidadeSelecionada:'',
@@ -117,6 +137,16 @@ export default {
         this.mostrarModal = true; // Exibe a tela/modal caso algum campo não tenha sido preenchido
         return;
       }
+
+      const weightRegex = /^[0-9]+(\.[0-9]{1,2})?$/;
+      if (!weightRegex.test(this.pesoInformado)) {
+        // O valor informado não é um número válido
+        this.isPesoValido = false; // Define o campo de peso como inválido
+        this.mostrarModalInputValido = true; // Exibe o modal de input inválido
+        return;
+      }
+
+
       const { data } = await axios.get('http://localhost:3000/transport');
 
       const objetosFiltrados = data.filter((item) => item.city === this.cidadeSelecionada);
@@ -154,17 +184,17 @@ export default {
 
       let custoTotalObjMenorPreço=0
       let custoTotalObjMenorLead=0
-      let weight= parseInt(this.pesoInformado)
+      let peso= parseInt(this.pesoInformado)
 
       //Custos
-      if( (weight > 0) && (weight <= 100) ){
-        custoTotalObjMenorLead = (weight * parseFloat(objetoMenorLeadTime.cost_transport_light.substr(3))).toFixed(2)
-        custoTotalObjMenorPreço = (weight * parseFloat(objetoMenorValor.cost_transport_light.substr(3))).toFixed(2)
-      }else if ( weight > 100 ){
-        custoTotalObjMenorLead = (weight * parseFloat(objetoMenorLeadTime.cost_transport_heavy.substr(3))).toFixed(2)
-        custoTotalObjMenorPreço = (weight * parseFloat(objetoMenorValor.cost_transport_heavy.substr(3))).toFixed(2)
+      if( (peso > 0) && (peso <= 100) ){
+        custoTotalObjMenorLead = (peso * parseFloat(objetoMenorLeadTime.cost_transport_light.substr(3))).toFixed(2)
+        custoTotalObjMenorPreço = (peso * parseFloat(objetoMenorValor.cost_transport_light.substr(3))).toFixed(2)
+      }else if ( peso > 100 ){
+        custoTotalObjMenorLead = (peso * parseFloat(objetoMenorLeadTime.cost_transport_heavy.substr(3))).toFixed(2)
+        custoTotalObjMenorPreço = (peso * parseFloat(objetoMenorValor.cost_transport_heavy.substr(3))).toFixed(2)
       }
-      
+
       this.companiaMenorPreco= objetoMenorValor.name
       this.tempoFreteMenorPreco= objetoMenorValor.lead_time
       this.custoTotalFreteMenorPreco= custoTotalObjMenorPreço
@@ -177,6 +207,9 @@ export default {
     },
     fecharModal(){
       this.mostrarModal=false
+    },
+    fecharModalInputValido(){
+      this.mostrarModalInputValido=false
     },
     limparResultado(){
       this.mostrarResultado=false
@@ -230,10 +263,53 @@ export default {
 }
 
 .form-container {
+  text-align: center;
   width: 50%;
   height: 100%;
   padding: 20px;
   background-color: #f2f2f2;
+}
+
+.form-container h1 {
+  font-family: 'Impact', fantasy;
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.form-container p {
+  padding-left: 1%;
+  text-align: left;
+  font-family: 'Arial', sans-serif;
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 8px;
+  
+}
+
+.form-container input,
+.form-container select {
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.form-container button {
+  font-family: 'Arial', sans-serif;
+  font-size: 16px;
+  padding: 10px 20px;
+  background-color: #333;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.form-container button:hover {
+  background-color: #555;
 }
 
 .form-container form {
@@ -254,12 +330,35 @@ export default {
   gap: 10px;
 }
 
-.rectangle {
+.pFrase{
+  font-family: 'Impact', fantasy;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  background-color: #333;
   width: 100%;
-  height: 100px;
-  background-color: #ccc;
+  text-align: center;
+  padding: 5px;
+  color: #fff;
 }
 
+.rectangle {
+  width: 100%;
+  max-height: 250px;
+  background-color: #ccc;
+  overflow: hidden;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.rectangle h1, .rectangle p {
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .modal {
   position: fixed;
   top: 0;
@@ -278,4 +377,57 @@ export default {
   border-radius: 5px;
   text-align: center;
 }
+
+.titulo{
+  border-radius: 5px;
+  background-color: #00aca6;
+  width: 100%;
+  text-align: center;
+  padding: 5px;
+  text-shadow:
+    -1px -1px 1px rgba(0, 0, 0, 0.8),
+    1px 1px 1px rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 24px;
+}
+.preco-container {
+  border-radius: 5px;
+  background-color: green;
+}
+.pInf{
+  color: #fff;
+  text-shadow:
+    -1px -1px 1px rgba(0, 0, 0, 0.8),
+    1px 1px 1px rgba(0, 0, 0, 0.8);
+}
+.preco {
+  text-align: center;
+  padding: 5px;
+  color: #fff;
+  text-shadow:
+    -1px -1px 1px rgba(0, 0, 0, 0.8),
+    1px 1px 1px rgba(0, 0, 0, 0.8);
+}
+
+.botaoLimpar{
+  font-family: 'Arial', sans-serif;
+  font-size: 16px;
+  padding: 10px 20px;
+  background-color: #333;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.botaoLimpar:hover {
+  background-color: #555;
+}
+
+.form-container img{
+  width: 75px;
+  height: 75px;
+}
+
+
 </style>

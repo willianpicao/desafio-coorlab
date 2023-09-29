@@ -1,10 +1,6 @@
-# Desafio CoorLab
-Olá DEV, pronto para participar do nosso processo seletivo?
+Realmente achei desafiante . O desafio foi meu primeiro contato com Vue.js.
 
-# Desafio feito é desafio entregue!
-Realmente achei desafiante hehe. Devido ao meu afastamento das linguagens JavaScript, HTML e CSS por um longo período de tempo, precisei revisitar muitos conceitos. Além disso, o desafio também foi meu primeiro contato com Vue.js.
-
-No entanto, mesmo com os desafios enfrentados, achei a experiência muito interessante e enriquecedora. Através da prática, pude aprender e aprimorar minhas habilidades de forma significativa. Foi gratificante poder aplicar os conhecimentos teóricos que adquiri anteriormente em um contexto real.
+Achei a experiência muito interessante e enriquecedora. Através da prática, pude aprender e aprimorar minhas habilidades de forma significativa. Foi gratificante poder aplicar os conhecimentos teóricos que adquiri anteriormente em um contexto real.
 
 No geral, estou satisfeito com o desafio e com a oportunidade de aprender e crescer durante o processo. Agradeço pela oportunidade e estou ansioso para continuar a expandir meu conhecimento e enfrentar novos desafios no futuro.
 
